@@ -7,11 +7,13 @@
   "scripts": {
     "postinstall": "node -e \"require('fs').existsSync('.env') || require('fs').copyFileSync('.env.example', '.env')\"",
     "start": "node build/index.js",
-    "dev:db": "docker-compose up",
+    "dev:db": "docker-compose up -d && npm run db:migrate",
     "dev:node": "tsnd src/index.ts --clear --respawn --transpile-only --ignore node_modules",
-    "dev": "npm run dev:db -- -d && npm run dev:node",
+    "dev": "npm run dev:db && npm run db:migrate && npm run dev:node",
     "build": "rm -rf build/ && tsc -p .",
     "typeorm": "tsnd node_modules/typeorm/cli.js",
+    "db:migrate": "npm run typeorm -- migration:run",
+    "db:reset": "npm run typeorm -- schema:drop && npm run db:migrate",
     "test": "cross-env NODE_ENV=test jest -i"
   },
   "dependencies": {
