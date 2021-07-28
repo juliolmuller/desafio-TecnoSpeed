@@ -5,10 +5,13 @@
   "license": "MIT",
   "author": "Julio L. Muller",
   "scripts": {
+    "postinstall": "node -e \"require('fs').existsSync('.env') || require('fs').copyFileSync('.env.example', '.env')\"",
     "start": "node build/index.js",
-    "development": "npm run dev",
-    "dev": "tsnd src/index.ts --clear --respawn --transpile-only --ignore node_modules",
+    "dev:db": "docker-compose up",
+    "dev:node": "tsnd src/index.ts --clear --respawn --transpile-only --ignore node_modules",
+    "dev": "npm run dev:db -- -d && npm run dev:node",
     "build": "rm -rf build/ && tsc -p .",
+    "typeorm": "tsnd node_modules/typeorm/cli.js",
     "test": "cross-env NODE_ENV=test jest -i"
   },
   "dependencies": {

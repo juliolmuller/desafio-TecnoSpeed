@@ -1,0 +1,14 @@
+version: "3.7"
+
+services:
+  postgres:
+    container_name: "db_postgres"
+    image: "postgres:13"
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "desafio_techspeed"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/data/postgres"
+    ports:
+      - "3003:5432"
