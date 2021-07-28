@@ -1,9 +1,9 @@
-import './config'
+import '../config'
 import path from 'path'
 import morgan from 'morgan'
 import express from 'express'
 import 'express-async-errors'
-import apiRoutes from './routes'
+import apiRoutes from '../routes'
 import errorHandler from './errors'
 
 const app = express()
