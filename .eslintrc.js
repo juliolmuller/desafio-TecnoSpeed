@@ -10,6 +10,7 @@ module.exports = {
     'lacussoft/typescript',
   ],
   rules: {
+    'camelcase': 'off',
     'no-console': 'off',
   },
 }
