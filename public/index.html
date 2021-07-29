@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kufam&family=Lobster&display=swap" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tata-js@latest/dist/index.css" />
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
@@ -16,21 +17,62 @@
       <h1 class="text-center my-4">
         {{ title }}
       </h1>
-      <div class="row">
-        <button class="col-4 btn btn-lg btn-danger" @click="decrease">
-          <i class="fa fa-minus"></i>
-        </button>
-        <div class="col-4">
-          <p class="h1 text-center">{{ count }}</p>
+
+      <div class="d-flex justify-content-center align-items-center mb-5">
+        <div class="bg-light border border-primary rounded p-3">
+          <form @submit.prevent="handleNewTransaction">
+            <div class="form-group mb-3">
+              <label for="value">Valor (R$):</label>
+              <input type="number" class="form-control" id="value" v-model="value" />
+            </div>
+            <div class="form-group mb-3">
+              <label for="desc">Descrição (opcional):</label>
+              <input type="text" class="form-control" id="desc" v-model="description" />
+            </div>
+            <button type="submit" class="btn btn-primary w-100">
+              Registrar <i class="fa fa-save"></i>
+            </button>
+          </form>
         </div>
-        <button class="col-4 btn btn-lg btn-success" @click="increase">
-          <i class="fa fa-plus"></i>
-        </button>
+        <div class="d-flex flex-column align-items-center mx-5">
+          <p class="muted">Seu saldo (R$)</p>
+          <p class="display-5">{{ balance.toFixed(2) }}</p>
+        </div>
+      </div>
+
+      <div class="w-50 mx-auto">
+        <div v-if="!transactions.length" class="d-flex justify-content-center align-items-center p-5">
+          Nenhuma transação para exibir
+        </div>
+        <table v-else class="table table-hover">
+          <thead>
+            <tr>
+              <th scope="col">Data</th>
+              <th scope="col">Descrição</th>
+              <th scope="col">Valor (R$)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="t in transactions" :key="t.id">
+              <th scope="row">{{ new Date(t.created_at).toLocaleDateString() }}</th>
+              <td>
+                <button type="button" class="btn btn-sm btn-light" @click="handleEditDescription(t)">
+                  <i class="fa fa-edit"></i>
+                </button>
+                {{ t.description }}
+              </td>
+              <td :class="t.value > 0 ? 'text-primary' : 'text-danger'">
+                <span class="fw-bolder">{{ t.value.toFixed(2) }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
     <script src="https://kit.fontawesome.com/5cdc6e7c19.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@latest/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tata-js@latest/dist/tata.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
     <script src="https://unpkg.com/vue@next"></script>
     <script type="module" src="js/scripts.js"></script>
