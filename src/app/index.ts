@@ -14,7 +14,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
 
 // resources routes
-app.use(express.static(path.join(__dirname, '..', 'public')))
+app.use(express.static(path.join(__dirname, '..', '..', 'public')))
 app.use('/api', apiRoutes)
 
 // error handling
