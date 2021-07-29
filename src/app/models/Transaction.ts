@@ -11,8 +11,8 @@ import {
 @Entity()
 class Transaction extends BaseEntity {
 
-  @PrimaryGeneratedColumn('uuid')
-  readonly id: string
+  @PrimaryGeneratedColumn('increment')
+  readonly id: number
 
   @Column()
   value: number

@@ -9,12 +9,17 @@ export class createTransactionsTable1627441527339 implements MigrationInterface 
       columns: [
         {
           name: 'id',
-          type: 'uuid',
+          type: 'integer',
+          unsigned: true,
           isPrimary: true,
+          isGenerated: true,
+          generationStrategy: 'increment',
         },
         {
           name: 'value',
-          type: 'money',
+          type: 'numeric',
+          precision: 14,
+          scale: 4,
         },
         {
           name: 'description',
