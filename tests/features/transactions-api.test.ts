@@ -188,4 +188,14 @@ describe('Transactions API', () => {
     expect(response.body.description).toBe(transactions[0].description)
     expect(response.body.value).toBe(transactions[0].value)
   })
+
+  it('Should return status 404 when trying to update invalid transaction', async () => {
+    const response = await request(app)
+      .put('/api/transactions/any-id').send({
+        description: 'foo',
+      })
+
+    expect(response.status).toBe(404)
+    expect(response.body).toHaveProperty('message')
+  })
 })
