@@ -6,7 +6,10 @@ import { transactionsResource } from '../resources'
 
 class TransactionsController {
   public index: RequestHandler = async (request, response) => {
-    const transactions = await Transaction.find()
+    const transactions = await Transaction
+      .createQueryBuilder(Transaction.name)
+      .orderBy('created_at', 'ASC')
+      .getMany()
 
     response
       .status(StatusCodes.OK)
