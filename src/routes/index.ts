@@ -1,5 +1,10 @@
 import { Router } from 'express'
+import transactionsRouter from './transactions.router'
+import balanceRouter from './balance.router'
 
-const router = Router()
+const mainRouter = Router()
 
-export default router
+mainRouter.use('/transactions', transactionsRouter)
+mainRouter.use('/balance', balanceRouter)
+
+export default mainRouter
