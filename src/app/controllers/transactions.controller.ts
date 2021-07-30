@@ -1,15 +1,14 @@
 import { StatusCodes } from 'http-status-codes'
 import { RequestHandler } from 'express'
-import { ResourceNotFound } from '../errors'
-import { Transaction } from '../models'
+import { Category, Transaction } from '../models'
 import { transactionsResource } from '../resources'
 
 class TransactionsController {
   public index: RequestHandler = async (request, response) => {
-    const transactions = await Transaction
-      .createQueryBuilder(Transaction.name)
-      .orderBy('created_at', 'ASC')
-      .getMany()
+    const transactions = await Transaction.find({
+      order: { createdAt: 'ASC' },
+      relations: ['category'],
+    })
 
     response
       .status(StatusCodes.OK)
@@ -17,10 +16,12 @@ class TransactionsController {
   }
 
   public store: RequestHandler = async (request, response) => {
-    const { value, description } = request.body as Transaction
+    const { value, description, category_id } = request.body
+    const category = category_id && await Category.findOne({ id: category_id })
     const transaction = new Transaction()
 
     transaction.description = description
+    transaction.category = category
     transaction.value = value
     await transaction.save()
 
@@ -30,15 +31,15 @@ class TransactionsController {
   }
 
   public update: RequestHandler = async (request, response) => {
-    const { description } = request.body as Transaction
+    const { description, category_id } = request.body
     const transactionId = Number(request.params.id)
-    const transaction = await Transaction.findOne({ id: transactionId })
-
-    if (!transaction) {
-      throw new ResourceNotFound('Transaction not found')
-    }
-
-    transaction.description = description
+    const category = category_id === null ? null : await Category.findOne({ id: category_id })
+    const transaction = await Transaction.findOneOrFail(transactionId, {
+      relations: ['category'],
+    })
+    console.log(category_id, category)
+    transaction.description = description === undefined ? transaction.description : description
+    transaction.category = category === undefined ? transaction.category : category as Category
     await transaction.save()
 
     response

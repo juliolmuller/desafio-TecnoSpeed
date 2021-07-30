@@ -1,13 +1,6 @@
 import { Transaction } from '../models'
-import { ModelSerializer } from './types'
-
-export type TransactionResource = {
-  id: number
-  value: number
-  description: string | null
-  created_at: Date | null
-  updated_at: Date | null
-}
+import categoriesResource from './categories.resource'
+import { ModelSerializer, TransactionResource } from './types'
 
 const transactionsResource: ModelSerializer<Transaction, TransactionResource> = {
   one(model) {
@@ -17,6 +10,9 @@ const transactionsResource: ModelSerializer<Transaction, TransactionResource> = 
       description: model.description || null,
       created_at: model.createdAt || null,
       updated_at: model.updatedAt || null,
+      category: model.category
+        ? categoriesResource.one(model.category)
+        : null,
     }
   },
   many(models) {

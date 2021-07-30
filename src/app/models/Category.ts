@@ -4,28 +4,27 @@ import {
   PrimaryGeneratedColumn,
   Column,
   JoinColumn,
-  ManyToOne,
+  OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm'
-import Category from './Category'
+import Transaction from './Transaction'
 
 @Entity()
-class Transaction extends BaseEntity {
+class Category extends BaseEntity {
 
   @PrimaryGeneratedColumn('increment')
   readonly id: number
 
   @Column()
-  value: number
-
-  @Column()
-  description?: string
+  name: string
 
   @JoinColumn({ name: 'category_id' })
-  @ManyToOne(() => Category, (category) => category.transactions)
-  category?: Category
+  @OneToMany(() => Transaction, (transaction) => transaction.category, {
+    cascade: ['insert', 'update'],
+  })
+  transactions: Transaction[]
 
   @CreateDateColumn()
   createdAt: Date
@@ -37,4 +36,4 @@ class Transaction extends BaseEntity {
   deletedAt?: Date
 }
 
-export default Transaction
+export default Category

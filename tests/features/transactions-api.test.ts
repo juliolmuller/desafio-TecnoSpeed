@@ -16,7 +16,7 @@ describe('Transactions API', () => {
     await connection.close()
   })
 
-  it('Get all transactions (empty)', async () => {
+  it('Should get all transactions (empty)', async () => {
     const response = await request(app)
       .get('/api/transactions').send()
 
@@ -33,7 +33,16 @@ describe('Transactions API', () => {
 
     expect(response.status).toBe(201)
     expect(response.body).toHaveProperty('id')
+    expect(response.body).toHaveProperty('value')
+    expect(response.body).toHaveProperty('category')
+    expect(response.body).toHaveProperty('description')
+    expect(response.body).toHaveProperty('created_at')
+    expect(response.body).toHaveProperty('updated_at')
+    expect(response.body).not.toHaveProperty('deleted_at')
     expect(response.body.id).toBeGreaterThanOrEqual(1)
+    expect(response.body.description).toBe('foo')
+    expect(response.body.category).toBeNull()
+    expect(response.body.value).toBe(1)
   })
 
   it('Should create a transaction with positive value (w/ description)', async () => {
@@ -46,11 +55,14 @@ describe('Transactions API', () => {
     expect(response.status).toBe(201)
     expect(response.body).toHaveProperty('id')
     expect(response.body).toHaveProperty('value')
+    expect(response.body).toHaveProperty('category')
     expect(response.body).toHaveProperty('description')
     expect(response.body).toHaveProperty('created_at')
     expect(response.body).toHaveProperty('updated_at')
     expect(response.body).not.toHaveProperty('deleted_at')
+    expect(response.body.id).toBeGreaterThanOrEqual(1)
     expect(response.body.description).toBe('bar')
+    expect(response.body.category).toBeNull()
     expect(response.body.value).toBe(20)
   })
 
@@ -64,11 +76,14 @@ describe('Transactions API', () => {
     expect(response.status).toBe(201)
     expect(response.body).toHaveProperty('id')
     expect(response.body).toHaveProperty('value')
+    expect(response.body).toHaveProperty('category')
     expect(response.body).toHaveProperty('description')
     expect(response.body).toHaveProperty('created_at')
     expect(response.body).toHaveProperty('updated_at')
-    expect(response.body).not.toHaveProperty('createdAt')
+    expect(response.body).not.toHaveProperty('deleted_at')
+    expect(response.body.id).toBeGreaterThanOrEqual(1)
     expect(response.body.description).toBe('baz')
+    expect(response.body.category).toBeNull()
     expect(response.body.value).toBe(-15)
   })
 
@@ -81,22 +96,52 @@ describe('Transactions API', () => {
     expect(response.status).toBe(201)
     expect(response.body).toHaveProperty('id')
     expect(response.body).toHaveProperty('value')
+    expect(response.body).toHaveProperty('category')
     expect(response.body).toHaveProperty('description')
     expect(response.body).toHaveProperty('created_at')
     expect(response.body).toHaveProperty('updated_at')
     expect(response.body).not.toHaveProperty('deleted_at')
+    expect(response.body.id).toBeGreaterThanOrEqual(1)
     expect(response.body.description).toBeNull()
+    expect(response.body.category).toBeNull()
     expect(response.body.value).toBe(5)
   })
 
-  it('Get all transactions (4 records)', async () => {
+  it('Should create a transaction with category', async () => {
+    const { body: category } = await request(app)
+      .post('/api/categories').send({ name: 'foo' })
+    const response = await request(app)
+      .post('/api/transactions').send({
+        category_id: category.id,
+        value: 3,
+      })
+
+    expect(response.status).toBe(201)
+    expect(response.body).toHaveProperty('id')
+    expect(response.body).toHaveProperty('value')
+    expect(response.body).toHaveProperty('category')
+    expect(response.body).toHaveProperty('description')
+    expect(response.body).toHaveProperty('created_at')
+    expect(response.body).toHaveProperty('updated_at')
+    expect(response.body).not.toHaveProperty('deleted_at')
+    expect(response.body.id).toBeGreaterThanOrEqual(1)
+    expect(response.body.description).toBeNull()
+    expect(response.body.category).toHaveProperty('id')
+    expect(response.body.category).toHaveProperty('name')
+    expect(response.body.category.name).toBe(category.name)
+    expect(response.body.category.id).toBe(category.id)
+    expect(response.body.value).toBe(3)
+  })
+
+  it('Should get all transactions (5 records)', async () => {
     const response = await request(app)
       .get('/api/transactions').send()
 
     expect(response.status).toBe(200)
-    expect(response.body).toHaveLength(4)
+    expect(response.body).toHaveLength(5)
     expect(response.body[0]).toHaveProperty('id')
     expect(response.body[0]).toHaveProperty('value')
+    expect(response.body[0]).toHaveProperty('category')
     expect(response.body[0]).toHaveProperty('description')
     expect(response.body[0]).toHaveProperty('created_at')
     expect(response.body[0]).toHaveProperty('updated_at')
@@ -133,60 +178,130 @@ describe('Transactions API', () => {
     expect(response.body.message).toHaveProperty('description')
   })
 
+  it('Should NOT create a transaction with invalid category ID', async () => {
+    const response = await request(app)
+      .post('/api/transactions').send({
+        category_id: 999999999,
+        value: 4,
+      })
+
+    expect(response.status).toBe(422)
+    expect(response.body).toHaveProperty('message')
+    expect(response.body.message).toHaveProperty('category_id')
+  })
+
   it('Should update description of a transaction', async () => {
-    const { body: transactions } = await request(app)
+    const { body: [transaction] } = await request(app)
       .get('/api/transactions').send()
     const response = await request(app)
-      .put(`/api/transactions/${transactions[0].id}`).send({
+      .put(`/api/transactions/${transaction.id}`).send({
         description: 'new',
+      })
+    console.log('|||1|||', transaction)
+    console.log('|||2|||', response.body)
+
+    expect(response.status).toBe(200)
+    expect(response.body).toHaveProperty('id')
+    expect(response.body).toHaveProperty('value')
+    expect(response.body).toHaveProperty('category')
+    expect(response.body).toHaveProperty('description')
+    expect(response.body).toHaveProperty('created_at')
+    expect(response.body).toHaveProperty('updated_at')
+    expect(response.body).not.toHaveProperty('deleted_at')
+    expect(response.body.id).toBe(transaction.id)
+    expect(response.body.value).toBe(transaction.value)
+    expect(response.body.category).toEqual(transaction.category)
+    expect(response.body.description).toBe('new')
+  })
+
+  it('Should update category of a transaction', async () => {
+    const { body: category } = await request(app)
+      .post('/api/categories').send({ name: 'foo' })
+    const { body: [transaction] } = await request(app)
+      .get('/api/transactions').send()
+    const response = await request(app)
+      .put(`/api/transactions/${transaction.id}`).send({
+        category_id: category.id,
       })
 
     expect(response.status).toBe(200)
     expect(response.body).toHaveProperty('id')
     expect(response.body).toHaveProperty('value')
+    expect(response.body).toHaveProperty('category')
     expect(response.body).toHaveProperty('description')
     expect(response.body).toHaveProperty('created_at')
     expect(response.body).toHaveProperty('updated_at')
     expect(response.body).not.toHaveProperty('deleted_at')
-    expect(response.body.description).toBe('new')
-    expect(response.body.value).toBe(transactions[0].value)
+    expect(response.body.id).toBe(transaction.id)
+    expect(response.body.value).toBe(transaction.value)
+    expect(response.body.description).toBe(transaction.description)
+    expect(response.body.category).toEqual(category)
   })
 
   it('Should remove description of a transaction', async () => {
-    const { body: transactions } = await request(app)
+    const { body: [transaction] } = await request(app)
       .get('/api/transactions').send()
     const response = await request(app)
-      .put(`/api/transactions/${transactions[0].id}`).send({})
+      .put(`/api/transactions/${transaction.id}`).send({
+        description: null,
+      })
 
     expect(response.status).toBe(200)
     expect(response.body).toHaveProperty('id')
     expect(response.body).toHaveProperty('value')
+    expect(response.body).toHaveProperty('category')
     expect(response.body).toHaveProperty('description')
     expect(response.body).toHaveProperty('created_at')
     expect(response.body).toHaveProperty('updated_at')
     expect(response.body).not.toHaveProperty('deleted_at')
+    expect(response.body.id).toBe(transaction.id)
+    expect(response.body.value).toBe(transaction.value)
+    expect(response.body.category).toEqual(transaction.category)
     expect(response.body.description).toBeNull()
-    expect(response.body.value).toBe(transactions[0].value)
+  })
+
+  it('Should remove category of a transaction', async () => {
+    const { body: [transaction] } = await request(app)
+      .get('/api/transactions').send()
+    const response = await request(app)
+      .put(`/api/transactions/${transaction.id}`).send({
+        description: 'baz',
+        category_id: null,
+      })
+
+    expect(response.status).toBe(200)
+    expect(response.body).toHaveProperty('id')
+    expect(response.body).toHaveProperty('value')
+    expect(response.body).toHaveProperty('category')
+    expect(response.body).toHaveProperty('description')
+    expect(response.body).toHaveProperty('created_at')
+    expect(response.body).toHaveProperty('updated_at')
+    expect(response.body).not.toHaveProperty('deleted_at')
+    expect(response.body.id).toBe(transaction.id)
+    expect(response.body.value).toBe(transaction.value)
+    expect(response.body.description).toBe('baz')
+    expect(response.body.category).toBeNull()
   })
 
   it('Should NOT update value of a transaction', async () => {
-    const { body: transactions } = await request(app)
+    const { body: [transaction] } = await request(app)
       .get('/api/transactions').send()
     const response = await request(app)
-      .put(`/api/transactions/${transactions[0].id}`).send({
-        description: transactions[0].description,
+      .put(`/api/transactions/${transaction.id}`).send({
         value: 7,
       })
 
     expect(response.status).toBe(200)
     expect(response.body).toHaveProperty('id')
     expect(response.body).toHaveProperty('value')
+    expect(response.body).toHaveProperty('category')
     expect(response.body).toHaveProperty('description')
     expect(response.body).toHaveProperty('created_at')
     expect(response.body).toHaveProperty('updated_at')
     expect(response.body).not.toHaveProperty('deleted_at')
-    expect(response.body.description).toBe(transactions[0].description)
-    expect(response.body.value).toBe(transactions[0].value)
+    expect(response.body.description).toBe(transaction.description)
+    expect(response.body.category).toEqual(transaction.category)
+    expect(response.body.value).toBe(transaction.value)
   })
 
   it('Should return status 404 when trying to update invalid transaction', async () => {
