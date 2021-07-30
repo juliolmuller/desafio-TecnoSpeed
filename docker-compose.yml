@@ -6,7 +6,7 @@ services:
     image: "postgres:13"
     restart: unless-stopped
     environment:
-      POSTGRES_DB: "desafio_techspeed"
+      POSTGRES_DB: "desafio_tecnospeed"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "postgres"
       PGDATA: "/data/postgres"
