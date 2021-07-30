@@ -1,31 +1,111 @@
 /* eslint-env browser */
 /* eslint-disable no-undef */
 
-const http = axios.create({ baseURL: `${location.href}api` })
+const http = axios.create({ baseURL: `${location.origin}/api` })
+
+function useBalance() {
+  const balance = Vue.ref(0)
+
+  async function fetchBalance() {
+    const response = await http.get('balance')
+    balance.value = response.data.total_balance
+  }
+
+  fetchBalance()
+
+  return {
+    balance,
+    fetchBalance,
+  }
+}
+
+function useCategories() {
+  const categories = Vue.reactive([])
+
+  async function fetchCategories() {
+    const response = await http.get('categories')
+    categories.push(...response.data)
+  }
+
+  async function createCategory({ name }) {
+    const response = await http.post('categories', { name })
+    categories.push(response.data)
+
+    return response.data
+  }
+
+  fetchCategories()
+
+  return {
+    categories,
+    fetchCategories,
+    createCategory,
+  }
+}
+
+function useTransactions() {
+  const transactions = Vue.reactive([])
+
+  async function fetchTransactions() {
+    const response = await http.get('transactions')
+    transactions.push(...response.data)
+  }
+
+  async function createTransaction({ value, description, category_id }) {
+    const response = await http.post('transactions', { value, description, category_id })
+    transactions.push(response.data)
+
+    return response.data
+  }
+
+  async function updateTransaction({ id, description, category_id }) {
+    const response = await http.put(`transactions/${id}`, { description, category_id })
+    const index = transactions.findIndex((transaction) => transaction.id === id)
+    transactions.splice(index, 1, response.data)
+
+    return response.data
+  }
+
+  fetchTransactions()
+
+  return {
+    transactions,
+    fetchTransactions,
+    createTransaction,
+    updateTransaction,
+  }
+}
 
 Vue.createApp({
   setup() {
-    const title = 'e-Wallet'
-    const balance = Vue.ref(0)
-    const transactions = Vue.reactive([])
+    const { balance, fetchBalance } = useBalance()
+    const { categories, createCategory } = useCategories()
+    const { transactions, createTransaction, updateTransaction } = useTransactions()
+    const editingTransaction = Vue.ref(null)
+    const editingField = Vue.ref('')
+    const newCategory = Vue.ref('')
+    const descriptionModal = Vue.ref(null)
+    const categoryModal = Vue.ref(null)
     const formData = Vue.reactive({
       description: '',
+      category: null,
       value: 0,
     })
 
-    async function getBalance() {
-      const { data } = await http.get('balance')
-      balance.value = data.total_balance
+    function handleEditField(transaction, field) {
+      editingTransaction.value = transaction
+      editingField.value = transaction[field]?.id
+        ? transaction[field].id
+        : transaction[field] ?? ''
     }
 
     async function handleNewTransaction() {
       try {
-        const { data } = await http.post('/transactions', formData)
-        transactions.push(data)
+        await createTransaction(formData)
         formData.description = ''
         formData.value = 0
         tata.success('Sucesso', 'Transação realizada')
-        getBalance()
+        fetchBalance()
       } catch (error) {
         const messages = error.response.data.message
         Object.keys(messages).forEach((field) => {
@@ -34,15 +114,21 @@ Vue.createApp({
       }
     }
 
-    async function handleEditDescription(transaction) {
+    async function handleUpdateCategory() {
       try {
-        const newDesc = prompt('Editar descrição:', transaction.description)
+        let category = categories.find(({ id }) => id === editingField.value)
 
-        if (newDesc !== null) {
-          await http.patch(`/transactions/${transaction.id}`, { description: newDesc })
-          transaction.description = newDesc
-          tata.success('Sucesso', 'Descrição salva')
+        if (!category && newCategory.value) {
+          category = await createCategory({ name: newCategory.value })
+          tata.success('Sucesso', 'Categoria criada')
         }
+
+        await updateTransaction({
+          id: editingTransaction.value.id,
+          category_id: category?.id ?? null,
+        })
+        categoryModal.value.click()
+        tata.success('Sucesso', 'Descrição salva')
       } catch (error) {
         const messages = error.response.data.message
         Object.keys(messages).forEach((field) => {
@@ -51,18 +137,36 @@ Vue.createApp({
       }
     }
 
-    getBalance()
-    http.get('transactions')
-      .then((response) => response.data)
-      .then((data) => transactions.push(...data))
+    async function handleUpdateDescription() {
+      try {
+        await updateTransaction({
+          id: editingTransaction.value.id,
+          description: editingField.value,
+        })
+        descriptionModal.value.click()
+        tata.success('Sucesso', 'Descrição salva')
+      } catch (error) {
+        const messages = error.response?.data.message
+        messages && Object.keys(messages).forEach((field) => {
+          tata.error(field, messages[field][0])
+        })
+      }
+    }
 
     return {
-      title,
+      title: 'e-Wallet',
+      form: formData,
       balance,
+      categories,
       transactions,
-      ...Vue.toRefs(formData),
+      newCategory,
+      editingField,
+      handleEditField,
       handleNewTransaction,
-      handleEditDescription,
+      handleUpdateCategory,
+      handleUpdateDescription,
+      descriptionModal,
+      categoryModal,
     }
   },
 }).mount('#app')
