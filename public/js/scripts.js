@@ -4,11 +4,17 @@
 const http = axios.create({ baseURL: `${location.origin}/api` })
 
 function useBalance() {
-  const balance = Vue.ref(0)
+  const balance = Vue.reactive({
+    credits: 0,
+    debits: 0,
+    total: 0,
+  })
 
-  async function fetchBalance() {
-    const response = await http.get('balance')
-    balance.value = response.data.total_balance
+  async function fetchBalance({ from, to } = {}) {
+    const response = await http.get('balance', { params: { from, to } })
+    balance.credits = response.data.total_credits
+    balance.debits = response.data.total_debits
+    balance.total = response.data.total_balance
   }
 
   fetchBalance()
@@ -46,9 +52,9 @@ function useCategories() {
 function useTransactions() {
   const transactions = Vue.reactive([])
 
-  async function fetchTransactions() {
-    const response = await http.get('transactions')
-    transactions.push(...response.data)
+  async function fetchTransactions({ from, to } = {}) {
+    const response = await http.get('transactions', { params: { from, to } })
+    transactions.splice(0, transactions.length, ...response.data)
   }
 
   async function createTransaction({ value, description, category_id }) {
@@ -80,8 +86,10 @@ Vue.createApp({
   setup() {
     const { balance, fetchBalance } = useBalance()
     const { categories, createCategory } = useCategories()
-    const { transactions, createTransaction, updateTransaction } = useTransactions()
+    const { transactions, fetchTransactions, createTransaction, updateTransaction } = useTransactions()
     const editingTransaction = Vue.ref(null)
+    const fromDate = Vue.ref('')
+    const toDate = Vue.ref('')
     const editingField = Vue.ref('')
     const newCategory = Vue.ref('')
     const descriptionModal = Vue.ref(null)
@@ -153,15 +161,28 @@ Vue.createApp({
       }
     }
 
+    function clearFilters() {
+      fromDate.value = ''
+      toDate.value = ''
+    }
+
+    Vue.watch([fromDate, toDate], ([from, to]) => {
+      fetchTransactions({ from, to })
+      fetchBalance({ from, to })
+    })
+
     return {
       title: 'e-Wallet',
       form: formData,
       balance,
+      fromDate,
+      toDate,
       categories,
       transactions,
       newCategory,
       editingField,
       handleEditField,
+      clearFilters,
       handleNewTransaction,
       handleUpdateCategory,
       handleUpdateDescription,

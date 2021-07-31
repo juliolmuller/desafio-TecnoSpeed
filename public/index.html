@@ -36,14 +36,59 @@
         </div>
         <div class="d-flex flex-column align-items-center mx-5">
           <p class="muted">Seu saldo (R$)</p>
-          <p class="display-5">{{ balance.toFixed(2) }}</p>
+          <p class="display-5">{{ balance.total.toFixed(2) }}</p>
+          <div class="w-100 d-flex justify-content-between g-3 fw-bolder text-primary">
+            <span>Entradas (R$)</span>
+            <span>{{ balance.credits.toFixed(2) }}</span>
+          </div>
+          <div class="w-100 d-flex justify-content-between g-3 fw-bolder text-danger">
+            <span>Saídas (R$)</span>
+            <span>{{ balance.debits.toFixed(2) }}</span>
+          </div>
         </div>
       </div>
 
       <div class="w-75 mx-auto">
+        <div class="row align-items-center justify-content-center bg-secondary rounded my-3 pb-3 g-3">
+          <div class="col-auto">
+            <span class="col-form-label">
+              <i class="fa fa-filter mr-3"></i>
+              Mostrar dados de
+            </span>
+          </div>
+          <div class="col-auto">
+            <input type="date" class="form-control" v-model="fromDate" />
+          </div>
+          <div class="col-auto">
+            <span class="col-form-label">até</span>
+          </div>
+          <div class="col-auto">
+            <input type="date" class="form-control" v-model="toDate" />
+          </div>
+          <button
+            type="button"
+            class="col-auto btn btn-sm"
+            title="Limpar filtros"
+            data-bs-toggle="tooltip"
+            data-bs-placement="top"
+            @click="clearFilters"
+          >
+            <i class="fa fa-trash" v-show="fromDate || toDate"></i>
+          </button>
+          <a
+            :href="`/api/transactions?from=${fromDate}&to=${toDate}&download=csv`"
+            class="col-auto btn btn-link ml-4 text-success bg-white"
+            title="Exportar para CSV"
+            target="_blank"
+          >
+            <i class="fa fa-file-excel-o" v-show="transactions.length"></i>
+          </a>
+        </div>
+
         <div v-if="!transactions.length" class="d-flex justify-content-center align-items-center p-5">
           Nenhuma transação para exibir
         </div>
+
         <table v-else class="table table-hover">
           <thead>
             <tr>
