@@ -37,7 +37,7 @@ class TransactionsController {
     const transaction = await Transaction.findOneOrFail(transactionId, {
       relations: ['category'],
     })
-    console.log(category_id, category)
+
     transaction.description = description === undefined ? transaction.description : description
     transaction.category = category === undefined ? transaction.category : category as Category
     await transaction.save()

@@ -197,8 +197,6 @@ describe('Transactions API', () => {
       .put(`/api/transactions/${transaction.id}`).send({
         description: 'new',
       })
-    console.log('|||1|||', transaction)
-    console.log('|||2|||', response.body)
 
     expect(response.status).toBe(200)
     expect(response.body).toHaveProperty('id')
