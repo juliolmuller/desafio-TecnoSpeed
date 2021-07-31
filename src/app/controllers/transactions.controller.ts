@@ -6,7 +6,7 @@ import { addDateRangeClause } from '../../utils'
 
 class TransactionsController {
   public index: RequestHandler = async (request, response) => {
-    const { from, to } = request.query as Record<string, string>
+    const { from, to, download = false } = request.query as Record<string, string>
 
     const queryBuilder = await Transaction
       .createQueryBuilder('t')
@@ -16,6 +16,14 @@ class TransactionsController {
 
     addDateRangeClause(queryBuilder, 't.created_at', { from, to })
     const transactions = await queryBuilder.getMany()
+
+    if (download) {
+      response
+        .status(StatusCodes.OK)
+        .attachment('extrato.csv')
+        .send(transactionsResource.csv?.(transactions))
+      return
+    }
 
     response
       .status(StatusCodes.OK)
