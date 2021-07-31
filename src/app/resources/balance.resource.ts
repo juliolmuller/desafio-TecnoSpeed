@@ -1,13 +1,15 @@
+import { BalanceResource } from './types'
 
-export type BalanceResource = {
-  total_balance: number
-  date_time: Date
-}
+function balanceResource(debits: number, credits: number): BalanceResource {
+  const roundedDebits = Math.round(debits * 100) / 100
+  const roundedCredits = Math.round(credits * 100) / 100
+  const roundedBalance = Math.round((roundedDebits + roundedCredits) * 100) / 100
 
-function balanceResource(balance: number): BalanceResource {
   return {
     date_time: new Date(),
-    total_balance: Math.round(balance * 100) / 100,
+    total_debits: roundedDebits,
+    total_credits: roundedCredits,
+    total_balance: roundedBalance,
   }
 }
 

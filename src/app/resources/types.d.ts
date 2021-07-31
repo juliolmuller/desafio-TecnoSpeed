@@ -19,3 +19,10 @@ export type TransactionResource = {
   created_at: Date | null
   updated_at: Date | null
 }
+
+export type BalanceResource = {
+  total_debits: number
+  total_credits: number
+  total_balance: number
+  date_time: Date
+}

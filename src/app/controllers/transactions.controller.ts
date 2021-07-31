@@ -2,13 +2,20 @@ import { StatusCodes } from 'http-status-codes'
 import { RequestHandler } from 'express'
 import { Category, Transaction } from '../models'
 import { transactionsResource } from '../resources'
+import { addDateRangeClause } from '../../utils'
 
 class TransactionsController {
   public index: RequestHandler = async (request, response) => {
-    const transactions = await Transaction.find({
-      order: { createdAt: 'ASC' },
-      relations: ['category'],
-    })
+    const { from, to } = request.query as Record<string, string>
+
+    const queryBuilder = await Transaction
+      .createQueryBuilder('t')
+      .select('t')
+      .leftJoinAndSelect('t.category', 'c')
+      .orderBy('t.created_at', 'ASC')
+
+    addDateRangeClause(queryBuilder, 't.created_at', { from, to })
+    const transactions = await queryBuilder.getMany()
 
     response
       .status(StatusCodes.OK)
