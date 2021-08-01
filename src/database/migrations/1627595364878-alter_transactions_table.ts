@@ -1,4 +1,5 @@
 import { MigrationInterface, QueryRunner, TableColumn, TableForeignKey } from 'typeorm'
+
 export class alterTransactionsTable1627595364878 implements MigrationInterface {
   private readonly TABLE_NAME = 'transactions'
 
